@@ -46,12 +46,8 @@ struct livro
 };
 
 //struct que contém todos os livros armazenados
-struct livro acervo[15] = 
-{
-    { "An Ukranian Journey", {17, 2, 2020}, 35.00, folclore },
-    { "Logica de Programacao", {5, 3, 2025}, 67.20, computer }
-};
-int total_livros = 2;
+struct livro acervo[15];
+int total_livros = 0;
 
 
 //prototipagem das funções
@@ -60,11 +56,29 @@ void limpar_buffer();
 void listar_livros(struct livro acervo[]);
 void detalhamento(struct livro acervo[], int witchdetails);
 void estatisticas(struct livro acervo[], int total_livros);
+void read_acervo();
+void save_acervo();
 
 int main()
 {
     int whichdetails;
     int option = 1;
+    read_acervo();
+
+    if (total_livros == 0)
+    {
+        // Adiciona os livros padrao APENAS se o arquivo não existia ou estava vazio
+        struct livro livro1 = { "An Ukranian Journey", {17, 2, 2020}, 35.00, folclore };
+        acervo[total_livros] = livro1;
+        total_livros++;
+
+        struct livro livro2 = { "Logica de Programacao", {5, 3, 2025}, 67.20, computer };
+        acervo[total_livros] = livro2;
+        total_livros++;
+
+        save_acervo();
+    }
+
     while(option != 0)
     {
         system("clear"); //limpa tela
@@ -119,7 +133,8 @@ int main()
 
             acervo[total_livros] = newlivro;
             total_livros++;
-
+            save_acervo();
+            getchar();
         }
 
         if(option == 2)
@@ -135,12 +150,14 @@ int main()
             }
             limpar_buffer();
             getchar();
+            save_acervo();
         }
         if(option == 3)
         {
             limpar_buffer();
             system("clear");
             estatisticas(acervo, total_livros);
+            save_acervo();
         }
     }
 }
@@ -226,4 +243,26 @@ void estatisticas(struct livro acervo[], int total_livros)
     printf("Outros - %d livros, R$%.2f investidos\n", catout, sumout);
     printf("Total de livros: %d, Valor total investido: R$%.2f\n", total_livros, sumprices);
     getchar();
+}
+
+void read_acervo()
+{
+    FILE *arquivo = fopen("acervo.bin", "rb");
+    if (arquivo == NULL) //verificacao se o arquivo existe
+    {
+        return;
+    }
+
+    while(total_livros < 15 && fread(&acervo[total_livros], sizeof(struct livro), 1, arquivo) == 1)
+    {
+        total_livros++;
+    }
+    fclose(arquivo);
+}
+
+void save_acervo()
+{
+    FILE *arquivo = fopen("acervo.bin", "wb");
+    fwrite(acervo, sizeof(struct livro), total_livros, arquivo); //salva os dados
+    fclose(arquivo);
 }
